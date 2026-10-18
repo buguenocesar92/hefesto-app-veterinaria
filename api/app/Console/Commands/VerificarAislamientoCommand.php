@@ -89,12 +89,17 @@ class VerificarAislamientoCommand extends Command
      * funciona bien y cada quien ve los datos de las demas clinicas.
      *
      * Es el fallo mas grave posible y el mas silencioso, asi que se comprueba
-     * primero, antes de dar la instalacion por buena.
+     * primero, antes de dar la instalacion por buena y antes de escribir las
+     * filas de la prueba.
+     *
+     * La consulta va directo a `pg_roles` por el nombre del rol: no depende de
+     * que la base tenga datos, asi que una instalacion recien creada, vacia,
+     * tambien se verifica.
      */
     private function comprobarRol(): bool
     {
         $fila = DB::selectOne(
-            'SELECT rolsuper AS superusuario, rolbypassrls AS bypass
+            'SELECT rolname AS nombre, rolsuper AS superusuario, rolbypassrls AS bypass
              FROM pg_roles WHERE rolname = current_user',
         );
 
@@ -105,22 +110,33 @@ class VerificarAislamientoCommand extends Command
         }
 
         if ($fila->superusuario) {
-            $this->components->error('El rol de la aplicacion ES SUPERUSUARIO.');
-            $this->components->error('Un superusuario ignora TODAS las politicas RLS.');
-            $this->components->error('El aislamiento NO esta activo. No sigas.');
+            $this->components->error("El rol \"{$fila->nombre}\" ES SUPERUSUARIO.");
+            $this->components->error('Un superusuario ignora TODAS las politicas de Row Level Security.');
+            $this->components->error('`FORCE ROW LEVEL SECURITY` sujeta al dueno de la tabla, pero NO al');
+            $this->components->error('superusuario: con este rol el aislamiento entre clinicas no existe.');
+            $this->components->error('Que hacer: `POSTGRES_USER` debe ser el rol de arranque');
+            $this->components->error('`veterinaria_admin`, que la aplicacion nunca usa, y el rol de la');
+            $this->components->error('aplicacion tiene que estar creado NOSUPERUSER NOBYPASSRLS en');
+            $this->components->error('`deploy/postgres/inicializar-rol.sh`.');
+            $this->components->error('Patron de referencia: apps/almacen/deploy/postgres/inicializar-rol.sh');
 
             return false;
         }
 
         if ($fila->bypass) {
-            $this->components->error('El rol de la aplicacion tiene BYPASSRLS.');
-            $this->components->error('Con BYPASSRLS las politicas no aplican. El aislamiento NO esta activo.');
-            $this->components->error('Revise con: REVOKE BYPASSRLS FROM <rol>;');
+            $this->components->error("El rol \"{$fila->nombre}\" tiene BYPASSRLS.");
+            $this->components->error('Con BYPASSRLS, PostgreSQL ignora TODAS las politicas de Row Level Security,');
+            $this->components->error('aunque las tablas tengan `FORCE ROW LEVEL SECURITY` puesto.');
+            $this->components->error('Que hacer: el mismo de arriba. `POSTGRES_USER` debe ser el rol de');
+            $this->components->error('arranque `veterinaria_admin`, que la aplicacion nunca usa, y el rol de');
+            $this->components->error('la aplicacion tiene que estar creado NOSUPERUSER NOBYPASSRLS en');
+            $this->components->error('`deploy/postgres/inicializar-rol.sh`.');
+            $this->components->error('Patron de referencia: apps/almacen/deploy/postgres/inicializar-rol.sh');
 
             return false;
         }
 
-        $this->components->info('El rol no es superusuario ni tiene BYPASSRLS.');
+        $this->components->info("El rol \"{$fila->nombre}\" no es superusuario ni tiene BYPASSRLS.");
 
         return true;
     }
