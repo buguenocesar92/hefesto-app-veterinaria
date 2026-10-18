@@ -1,0 +1,86 @@
+<?php
+
+declare(strict_types=1);
+
+return [
+
+    /*
+    |--------------------------------------------------------------------------
+    | Guard web
+    |--------------------------------------------------------------------------
+    |
+    | VeterinariaHefesto no tiene usuarios ni contrasenas propias: la identidad
+    | la emite Authentik con OpenID Connect y Laravel la recibe como cookie de
+    | sesion (ver App\Services\Auth). El guard `web` es el unico que existe.
+    |
+    */
+
+    'defaults' => [
+        'guard' => 'web',
+        'passwords' => 'usuarios',
+    ],
+
+    'guards' => [
+        'web' => [
+            'driver' => 'session',
+            'provider' => 'usuarios',
+        ],
+    ],
+
+    'providers' => [
+        'usuarios' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\Usuario::class,
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Almacenamiento de la sesion
+    |--------------------------------------------------------------------------
+    |
+    | NO va aqui. El manejador de sesion se configura en config/session.php y
+    | se registra en App\Providers\SessionServiceProvider, que es donde
+    | Laravel permite cambiar el manejador del controlador `database`.
+    |
+    | Ver App\Services\Auth\AlmacenDeSesion para el problema de orden que
+    | resuelve (RLS en `sesiones` contra la necesidad de leerla antes de saber
+    | la clinica), y config/session.php para el registro.
+    |
+    */
+
+    /*
+    |--------------------------------------------------------------------------
+    | Reinicio de contrasena
+    |--------------------------------------------------------------------------
+    |
+    | Se deja el bloque porque Laravel lo espera, pero esta aplicacion NO tiene
+    | contrasenas: el restablecimiento se hace en Authentik. No se debe
+    | habilitar esta via sin una decision de seguridad previa. Ver docs/07.
+    |
+    */
+
+    'passwords' => [
+        'usuarios' => [
+            'provider' => 'usuarios',
+            'table' => 'password_reset_tokens',
+            'expire' => 60,
+            'throttle' => 60,
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Tiempo de vida de la sesion
+    |--------------------------------------------------------------------------
+    |
+    | En una clinica una sesion abierta mucho rato es una sesion abierta a la
+    | ficha clinica. El valor por omision de Laravel es 120 minutos.
+    |
+    */
+
+    'expiration' => (int) env('SESSION_EXPIRACION_MINUTOS', 120),
+
+    'password_timeout' => (int) env('AUTH_PASSWORD_TIMEOUT', 10800),
+
+];

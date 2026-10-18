@@ -1,0 +1,82 @@
+# =============================================================================
+# Hefesto Studio — VeterinariaHefesto: Caddy
+# =============================================================================
+# Un solo dominio. La interfaz y la API estan en el MISMO origen a proposito.
+#
+# POR QUE EL MISMO ORIGEN, Y NO SUBDOMINIOS
+# ------------------------------------------
+# La sesion viaja en una cookie. Con la interfaz en `app.clinica.cl` y la API en
+# `api.clinica.cl`, la cookie de sesion tendria que ser `Domain=.clinica.cl`:
+# visible para los dos subdominios y para CUALQUIER otro que se agregue despues
+# a ese dominio.
+#
+# Con un solo origen, la cookie queda acotada al host exacto, y la API no es
+# alcanzable desde ningun otro lugar. Es la misma razon por la que la interfaz
+# no habla directo con la API: el BFF reenvia la cookie desde el servidor.
+#
+# CABECERAS DE SEGURIDAD
+# ----------------------
+# Las minima que aplican sin romper una interfaz de uso interno. La CSP es
+# deliberadamente sencilla: esta aplicacion no carga scripts de terceros.
+# =============================================================================
+
+{$DOMINIO:localhost} {
+    email {$ACME_EMAIL}
+
+    # ---------------------------------------------------------------------
+    # Codificacion y transporte
+    # ---------------------------------------------------------------------
+    encode zstd gzip
+
+    # ---------------------------------------------------------------------
+    # Cabeceras de seguridad
+    # ---------------------------------------------------------------------
+    header {
+        # No se muestra en un iframe: evita el clickjacking sobre una pantalla
+        # donde se prescriben medicamentos.
+        X-Frame-Options "DENY"
+
+        # Nada de referencias: un enlace a una pagina externa no debe dejar la
+        # URL de la ficha clinica en la barra de direcciones del destino.
+        Referrer-Policy "no-referrer"
+
+        # Que el navegador no se deje influenciar por cabeceras del servidor.
+        X-Content-Type-Options "nosniff"
+
+        # Politica de contenido. `self`: esta aplicacion no carga nada de
+        # terceros, asi que no necesita permitir mas.
+        Content-Security-Policy "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'self'"
+
+        # Desactivar capacidades del navegador que esta aplicacion no usa. Un
+        # sistema de ficha clinica no necesita cámara, microfono ni geolocalizacion.
+        Permissions-Policy "camera=(), microphone=(), geolocation=(), interest-cohort=()"
+
+        # En produccion, HSTS. Solo tiene efecto si hay HTTPS de verdad, que es
+        # lo que Caddy garantiza con el certificado de ACME.
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+    }
+
+    # ---------------------------------------------------------------------
+    # Rutas de la API
+    # ---------------------------------------------------------------------
+    handle /api/* {
+        reverse_proxy api:8000
+    }
+
+    # Comprobacion de salud, sin registro.
+    handle /api/v1/salud {
+        reverse_proxy api:8000
+    }
+
+    # ---------------------------------------------------------------------
+    # Todo lo demas es la interfaz
+    # ---------------------------------------------------------------------
+    handle {
+        reverse_proxy web:3000
+    }
+
+    log {
+        output stdout
+        format json
+    }
+}

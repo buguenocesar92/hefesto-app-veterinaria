@@ -1,0 +1,120 @@
+/* Estilos base de VeterinariaHefesto.
+ *
+ * Pocos estilos a proposito. La interfaz es de uso interno, en pantallas de
+ * escritorio, y lo que importa es que se lea rapido: la agenda del dia y el
+ * nombre del animal.
+ *
+ * CONTRASTE
+ * ---------
+ * Los textos son oscuros sobre fondo claro. En una clinica la pantalla se lee
+ * a veces con apuro y de lejos, y un gris claro sobre blanco es ilegible a
+ * esa distancia.
+ */
+
+:root {
+    --verde: #1f3a2e;
+    --verde-claro: #2f5544;
+    --fondo: #f7f8f7;
+    --texto: #1a1a1a;
+    --borde: #d4d8d5;
+    --alerta: #a4231f;
+    --aviso: #8a5a00;
+    --ok: #1e6b3a;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+    background: var(--fondo);
+    color: var(--texto);
+    font-size: 15px;
+    line-height: 1.5;
+}
+
+h1 {
+    font-size: 1.35rem;
+    margin: 0 0 1rem;
+}
+
+h2 {
+    font-size: 1.1rem;
+    margin: 1.5rem 0 0.75rem;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+}
+
+th,
+td {
+    text-align: left;
+    padding: 0.5rem 0.65rem;
+    border-bottom: 1px solid var(--borde);
+    vertical-align: top;
+}
+
+th {
+    background: #eef1ef;
+    font-weight: 600;
+}
+
+button {
+    font: inherit;
+    padding: 0.4rem 0.8rem;
+    border: 1px solid var(--borde);
+    border-radius: 0.35rem;
+    background: #fff;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #eef1ef;
+}
+
+input,
+select {
+    font: inherit;
+    padding: 0.4rem 0.55rem;
+    border: 1px solid var(--borde);
+    border-radius: 0.35rem;
+}
+
+/* Estados que importan.
+ *
+ * El atraso de una vacuna tiene que verse de reojo en una pantalla a dos
+ * metros: color Y texto, nunca solo color. Quien tiene daltonismo no puede
+ * enterarse por el tono. */
+
+.estado-vigente {
+    color: var(--ok);
+}
+
+.estado-por-vencer {
+    color: var(--aviso);
+    font-weight: 600;
+}
+
+.estado-atrasada {
+    color: var(--alerta);
+    font-weight: 700;
+}
+
+.aviso {
+    background: #fff8e6;
+    border-left: 3px solid var(--aviso);
+    padding: 0.7rem 0.9rem;
+    margin: 0.75rem 0;
+    font-size: 0.92rem;
+}
+
+.vacio {
+    color: #666;
+    padding: 1.5rem 0;
+    font-style: italic;
+}

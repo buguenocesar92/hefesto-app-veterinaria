@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Configuracion de PHPUnit de VeterinariaHefesto.
+
+    Las suites estan separadas a proposito:
+
+      - `Aislamiento`: una clinica no puede leer datos de otra, y el historial
+        de una mascota no se mezcla con el de otra del mismo tutor. Usa Row
+        Level Security de PostgreSQL.
+      - `Permisos`: dentro de la clinica, quien puede abrir una ficha clinica
+        y quien no.
+      - `Unit`: logica pura, sin base de datos.
+
+    Se pueden correr solas, con la opcion `testsuite` de artisan:
+        Aislamiento, Permisos, Unit
+
+    (La opcion se escribe con dos guiones, pero no puede aparecer aqui: XML
+    prohibe el doble guion dentro de un comentario, y este archivo es XML.)
+-->
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="vendor/autoload.php"
+         colors="true"
+         cacheDirectory=".phpunit.cache"
+         failOnWarning="true"
+         failOnRisky="true"
+         beStrictAboutOutputDuringTests="true">
+    <testsuites>
+        <testsuite name="Unit">
+            <directory>tests/Unit</directory>
+        </testsuite>
+        <testsuite name="Feature">
+            <directory>tests/Feature</directory>
+        </testsuite>
+        <testsuite name="Aislamiento">
+            <directory>tests/Feature/Aislamiento</directory>
+        </testsuite>
+        <testsuite name="Permisos">
+            <directory>tests/Feature/Permisos</directory>
+        </testsuite>
+    </testsuites>
+    <source>
+        <include>
+            <directory>app</directory>
+        </include>
+    </source>
+    <php>
+        <env name="APP_ENV" value="testing"/>
+        <env name="APP_MAINTENANCE_DRIVER" value="file"/>
+        <env name="BCRYPT_ROUNDS" value="4"/>
+        <env name="CACHE_STORE" value="array"/>
+        <env name="MAIL_MAILER" value="array"/>
+        <env name="QUEUE_CONNECTION" value="sync"/>
+        <env name="SESSION_DRIVER" value="array"/>
+        <!--
+            IMPORTANTE: la base de pruebas tiene que ser PostgreSQL, no SQLite.
+
+            El aislamiento entre clinicas esta implementado con Row Level
+            Security, que es una funcion de PostgreSQL. En SQLite estas
+            pruebas pasarian sin comprobar nada, que es peor que no
+            tenerlas. Ver docs/10.
+        -->
+        <env name="DB_CONNECTION" value="pgsql"/>
+        <env name="DB_DATABASE" value="veterinaria_test"/>
+        <!--
+            En las pruebas la sesion va al almacen `array`, no a la tabla
+            `sesiones`. Es el unico punto donde se aparta del camino real, y
+            es a proposito: probar el guard completo exigiria el flujo de OIDC.
+            La parte que SI importa (que `sesiones` tenga RLS) se comprueba en
+            RowLevelSecurityTest y en el comando de verificacion del servidor.
+        -->
+    </php>
+</phpunit>
