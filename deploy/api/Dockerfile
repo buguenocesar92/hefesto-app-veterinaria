@@ -6,12 +6,37 @@
 # actualizacion silenciosa en produccion no es un despliegue.
 # =============================================================================
 
+# =============================================================================
+# CVE-2026-109618 / CVE-2026-109619 (PHP2Shell, 2026-10-22)
+# =============================================================================
+# La imagen se construye con PHP 8.4.27, que es la version PARCHEADA
+# de la serie 8.4. Las versiones parcheadas de PHP son
+# 8.2.35 / 8.3.36 / 8.4.27 / 8.5.12.
+#
+# Verificado el 2026-10-22 en el servidor de desarrollo, con el tag exacto:
+#
+#     $ docker run --rm docker.io/library/php:8.4-fpm-alpine3.24 php -v
+#     PHP 8.4.27 (cli) (built: Oct 21 2026 22:52:58)
+#
+# El tag `php:8.4-fpm-alpine3.24` es FLOTANTE: no se cambia, se deja constancia.
+# El tag resuelve hoy a PHP 8.4.27, que es la version parcheada de la serie
+# 8.4. Se deja escrito porque un tag flotante puede mudar sin que nadie lo
+# note: la comprobacion va en el candado (api/tests/Unit/), que falla si el
+# tag vuelve a quedar por debajo de la version parcheada.
+#
+# OJO: LA IMAGEN DESPLIEGADA HAY QUE RECONSTRUIRLA. El parche de PHP entra en
+# el contenedor por la IMAGEN, no por este repositorio: mientras no se
+# reconstruya y se redespliegue, el contenedor sigue con el PHP viejo. El
+# endurecimiento de mas abajo (el ini y el pool de php-fpm) es la red de seguridad
+# para ese mientras, y lo que sobrevive a un redeploy.
 FROM docker.io/library/php:8.4-fpm-alpine3.24
 
 # Herramientas de compilacion: hacen falta para instalar extensiones de PHP que
 # no vienen en la imagen base. Se quitan al final, en la misma capa, para que no
 # queden en la imagen final.
-RUN apk add --no-cache \
+RUN apk update \
+    && apk upgrade \
+    && apk add --no-cache \
         postgresql-dev \
         icu-dev \
         oniguruma-dev \
@@ -55,6 +80,12 @@ RUN composer dump-autoload --optimize --no-dev --classmap-authoritative \
     && chown -R appuser:appgroup storage bootstrap/cache
 
 COPY deploy/api/docker/php.ini /usr/local/etc/php/conf.d/99-veterinaria.ini
+
+# Endurecimiento PHP2Shell (CVE-2026-109618 / CVE-2026-109619):
+# la via CONFIRMADA (session.upload_progress) apagada, y los
+# trabajadores de php-fpm reciclados cada 100 peticiones.
+COPY deploy/api/docker/99-php2shell-hardening.ini /usr/local/etc/php/conf.d/99-php2shell-hardening.ini
+COPY deploy/api/docker/zz-php2shell-fpm.conf /usr/local/etc/php-fpm.d/zz-php2shell-hardening.conf
 COPY deploy/api/docker/nginx.conf /etc/nginx/nginx.conf
 COPY deploy/api/docker/supervisord.conf /etc/supervisord.conf
 COPY deploy/api/docker/entrypoint.sh /usr/local/bin/entrypoint.sh
