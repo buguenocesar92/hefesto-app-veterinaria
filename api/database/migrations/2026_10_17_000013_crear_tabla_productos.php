@@ -61,12 +61,12 @@ return new class extends Migration
             $tabla->unique(['tenant_id', 'sku']);
             $tabla->index(['tenant_id', 'activo']);
             $tabla->index(['tenant_id', 'categoria']);
-
-            // El stock no puede ser negativo: es la unica defensa de datos
-            // contra el error de tipeo en cantidad.
-            DB::statement('ALTER TABLE productos ADD CONSTRAINT productos_stock_check CHECK (stock >= 0)');
-            DB::statement('ALTER TABLE productos ADD CONSTRAINT productos_precio_check CHECK (precio >= 0)');
         });
+
+        // El stock no puede ser negativo: es la unica defensa de datos
+        // contra el error de tipeo en cantidad.
+        DB::statement('ALTER TABLE productos ADD CONSTRAINT productos_stock_check CHECK (stock >= 0)');
+        DB::statement('ALTER TABLE productos ADD CONSTRAINT productos_precio_check CHECK (precio >= 0)');
     }
 
     public function down(): void
