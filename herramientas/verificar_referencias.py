@@ -76,7 +76,13 @@ def declaran_clases() -> dict[str, Path]:
 
 def rutas_de_api() -> list[Path]:
     """Archivos PHP del proyecto donde puede haber referencias."""
-    return sorted((RAIZ / "api").rglob("*.php"))
+    # `vendor/` es codigo de terceros: aparece al instalar dependencias y trae
+    # sus propios namespaces `Tests\`, que no son clases de esta aplicacion.
+    return sorted(
+        ruta
+        for ruta in (RAIZ / "api").rglob("*.php")
+        if "vendor" not in ruta.relative_to(RAIZ).parts
+    )
 
 
 def main() -> int:
