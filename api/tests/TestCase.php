@@ -12,6 +12,7 @@ use App\Models\Tutor;
 use App\Models\Usuario;
 use App\Services\Tenancy\ContextoTenant;
 use Closure;
+use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 
 /**
@@ -35,6 +36,8 @@ use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
  */
 abstract class TestCase extends BaseTestCase
 {
+    use DatabaseMigrations;
+
     /**
      * Ejecuta una operacion dentro del contexto de una clinica.
      *
