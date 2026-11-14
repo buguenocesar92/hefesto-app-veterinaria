@@ -2,6 +2,10 @@
 
 Este es el primer documento que hay que leer antes de opinar sobre el código.
 
+> **Actualización (2026-11-14):** `api/` ya se ejecutó. El resultado real está
+> en [ESTADO-REAL.md](ESTADO-REAL.md). Lo que sigue describe el estado anterior
+> y sigue valiendo para `web/` y `deploy/`.
+
 ## Estado
 
 **Código escrito, sin ejecutar.**
