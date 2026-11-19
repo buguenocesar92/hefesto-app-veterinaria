@@ -85,6 +85,11 @@ COPY deploy/api/docker/php.ini /usr/local/etc/php/conf.d/99-veterinaria.ini
 # la via CONFIRMADA (session.upload_progress) apagada, y los
 # trabajadores de php-fpm reciclados cada 100 peticiones.
 COPY deploy/api/docker/99-php2shell-hardening.ini /usr/local/etc/php/conf.d/99-php2shell-hardening.ini
+
+# Mitigacion CVE-2026-126714 (GHSA-fm2m-fjf5-v3cp): apagado el vector de
+# sesion nativa `files` (session.upload_progress) y endurecido el ciclo de
+# vida de la sesion.
+COPY deploy/api/docker/php/99-security-cve-2026-126714.ini /usr/local/etc/php/conf.d/99-security-cve-2026-126714.ini
 COPY deploy/api/docker/zz-php2shell-fpm.conf /usr/local/etc/php-fpm.d/zz-php2shell-hardening.conf
 COPY deploy/api/docker/nginx.conf /etc/nginx/nginx.conf
 COPY deploy/api/docker/supervisord.conf /etc/supervisord.conf
