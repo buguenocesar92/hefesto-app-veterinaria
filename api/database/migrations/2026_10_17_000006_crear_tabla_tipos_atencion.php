@@ -47,15 +47,15 @@ return new class extends Migration
             $tabla->foreign('tenant_id')->references('id')->on('clinicas')->cascadeOnDelete();
             $tabla->unique(['tenant_id', 'nombre']);
             $tabla->index(['tenant_id', 'activo', 'bloque_vacunacion']);
-
-            // Una atencion no puede durar cero ni un dia entero. Es lo que
-            // impide que alguien con un error de tipeo guarde 0 y que la
-            // agenda nunca termine de calcular el `fin`.
-            DB::statement(
-                'ALTER TABLE tipos_atencion ADD CONSTRAINT tipos_atencion_duracion_check '
-                . 'CHECK (duracion_minutos > 0 AND duracion_minutos <= 480)'
-            );
         });
+
+        // Una atencion no puede durar cero ni un dia entero. Es lo que
+        // impide que alguien con un error de tipeo guarde 0 y que la
+        // agenda nunca termine de calcular el `fin`.
+        DB::statement(
+            'ALTER TABLE tipos_atencion ADD CONSTRAINT tipos_atencion_duracion_check '
+            . 'CHECK (duracion_minutos > 0 AND duracion_minutos <= 480)'
+        );
     }
 
     public function down(): void
