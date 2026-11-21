@@ -11,9 +11,13 @@ use PHPUnit\Framework\TestCase;
  *
  * QUE COMPRUEBA
  * -------------
- *   1. Que la base de la imagen use una version de PHP PARCHEADA (las
- *      parcheadas son 8.2.35 / 8.3.36 / 8.4.27 / 8.5.12) y que la version
- *      verificada que queda escrita en el ini no baje de la de la serie 8.4.
+ *   1. Que la base de la imagen use una version de PHP PARCHEADA (para
+ *      CVE-2026-109618 / CVE-2026-109619 las parcheadas son 8.2.35 / 8.3.36 /
+ *      8.4.27 / 8.5.12) y que la version verificada que queda escrita en el
+ *      ini no baje de la de la serie 8.4. El minimo que se exige es 8.4.28:
+ *      la imagen se construye con la version parcheada de la serie 8.4 para
+ *      CVE-2026-126714 (ver MitigacionCve2026126714VeterinariaTest), y el
+ *      minimo de la serie no puede ser MENOR que el de ninguno de los dos.
  *   2. Que el ini de endurecimiento apague `session.upload_progress.enabled`,
  *      que es la via CONFIRMADA de CVE-2026-109619.
  *   3. Que `memory_limit = -1` este SOLO si el compose declara `mem_limit`: sin
@@ -36,8 +40,13 @@ final class MitigacionPhp2ShellVeterinariaTest extends TestCase
 {
     /**
      * La version MINIMA de PHP parcheada de la serie 8.4.
+     *
+     * Es la mas alta de las que exigen los CVEs que tocan esta imagen: para
+     * CVE-2026-109618 / CVE-2026-109619 era 8.4.27 y para CVE-2026-126714 es
+     * 8.4.28. Si la imagen bajara a 8.4.27, el CVE-2026-126714 quedaria
+     * abierto.
      */
-    private const VERSION_MINIMA = '8.4.27';
+    private const VERSION_MINIMA = '8.4.28';
 
     private const SERIE = '8.4';
 

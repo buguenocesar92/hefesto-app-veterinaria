@@ -95,7 +95,7 @@ Consultadas contra el registro oficial de cada proyecto.
 | `vue-router` | `5.4.0` | `registry.npmjs.org/vue-router/latest` |
 | `postgres:18.6` | existe | Docker Hub |
 | `redis:8.8.3-alpine` | existe | Docker Hub |
-| `php:8.4-fpm-alpine3.24` | existe | Docker Hub |
+| `php:8.4.28-fpm-alpine3.24` | existe (fijada por digest en `deploy/api/Dockerfile`) | Docker Hub |
 | `node:24-alpine3.24` | existe | Docker Hub |
 | `nginx:1.29-alpine` | existe | Docker Hub |
 | `caddy:2.11.7-alpine` | existe | Docker Hub |
