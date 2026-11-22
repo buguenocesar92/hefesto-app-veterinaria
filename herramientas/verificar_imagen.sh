@@ -203,14 +203,35 @@ docker run --detach --name "$base-worker" --network "container:$base-pg" \
     --env CACHE_STORE=array --env QUEUE_CONNECTION=database \
     --entrypoint /usr/local/bin/entrypoint-worker.sh "$imagen" >/dev/null
 worker_ok=0
+registro_worker=""
 for _ in $(seq 1 60); do
-    if docker logs "$base-worker" 2>&1 | grep -q 'arrancando el worker de colas'; then
-        worker_ok=1
-        break
-    fi
+    # Sin tuberia: con `pipefail`, `docker logs | grep -q` falla cuando grep
+    # termina antes que docker logs (SIGPIPE) y el bucle no ve la linea.
+    registro_worker="$(docker logs "$base-worker" 2>&1 || true)"
+    case "$registro_worker" in
+        *'arrancando el worker de colas'*)
+            worker_ok=1
+            break
+            ;;
+    esac
     sleep 1
 done
-if [ "$worker_ok" = "1" ]; then bien "el worker arranca"; else mal "el worker no arranco"; docker logs "$base-worker" >&2 || true; fi
+if [ "$worker_ok" = "1" ]; then bien "el worker arranca"; else mal "el worker no arranco"; printf '%s\n' "$registro_worker" >&2; fi
+
+# El worker sondea la cola cada 3 s (--sleep=3): 10 s son tres sondeos.
+sleep 10
+registro_worker="$(docker logs "$base-worker" 2>&1 || true)"
+if [ "$(docker inspect --format '{{.State.Running}}' "$base-worker" 2>/dev/null || true)" = "true" ]; then
+    bien "el worker sigue vivo tras tres sondeos de la cola"
+else
+    mal "el worker se detuvo"
+fi
+if grep -qE '\.(ERROR|CRITICAL|ALERT|EMERGENCY):|PHP (Fatal error|Warning|Deprecated)' <<<"$registro_worker"; then
+    mal "el worker registra errores o avisos de PHP"
+    grep -m 5 -E '\.(ERROR|CRITICAL|ALERT|EMERGENCY):|PHP (Fatal error|Warning|Deprecated)' <<<"$registro_worker" >&2 || true
+else
+    bien "el worker no registra errores ni avisos de PHP"
+fi
 
 estado_migraciones="$(docker exec "$base-api" sh -c 'cd /var/www/html && php artisan migrate:status' 2>&1 || true)"
 if printf '%s' "$estado_migraciones" | grep -q 'activar_row_level_security' \
