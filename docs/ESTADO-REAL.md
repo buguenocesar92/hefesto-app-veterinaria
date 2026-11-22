@@ -43,6 +43,7 @@ la suite.
 | 9 | `verificar_referencias.py` recorría `api/vendor` | `herramientas/` | falso positivo en cuanto se instalan dependencias |
 | 10 | `sumarMeses` llamaba a `addMonthsNoOverflow()`, que es API de Carbon, sobre un `DateTimeImmutable` | `api/app/Services/Vacunas/CalculadorDeProximaDosis.php:95` | `Call to undefined method DateTimeImmutable::addMonthsNoOverflow()` |
 | 11 | La cola de Laravel no tenía tabla: con `QUEUE_CONNECTION=database` el worker se levanta y falla cada tres segundos | `api/database/migrations/2026_11_22_000019_crear_tabla_colas.php` | `relation "jobs" does not exist` |
+| 12 | `AUTHENTIK_SCOPES` sin comillas en el ejemplo: al copiar `api/.env.example` a `api/.env`, `phpdotenv` rechaza el valor con espacios y **todo comando de artisan falla** | `api/.env.example:118` | `Failed to parse dotenv file. Encountered unexpected whitespace at [openid profile email]` |
 
 ## Resultado de la suite
 

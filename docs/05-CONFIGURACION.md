@@ -113,7 +113,7 @@ arrancaria y cada peticion crearia su sesión sin persistirla.
 | `AUTHENTIK_CLIENT_ID` | Cliente OIDC **exclusivo de esta aplicación**, para poder revocarlo sin tocar las demas |
 | `AUTHENTIK_CLIENT_SECRET` | |
 | `AUTHENTIK_REDIRECT_URI` | Debe coincidir **exactamente** con lo configurado en Authentik |
-| `AUTHENTIK_SCOPES` | `openid profile email`. Sin `openid`, Authentik no devuelve `id_token` |
+| `AUTHENTIK_SCOPES` | `openid profile email`. Sin `openid`, Authentik no devuelve `id_token`. **Entre comillas** en el `.env`: `phpdotenv` rechaza un valor con espacios sin comillas |
 | `AUTHENTIK_ALGORITMO` | `RS256`. Se comprueba **antes** de la firma: corta el ataque de confusion de algoritmo |
 | `AUTHENTIK_CACHE_JWKS` | `86400`. Las claves rotan pocas veces |
 | `AUTHENTIK_LEEWAY` | `60`. Margen de reloj para `exp`, `iat` y `nbf` |
