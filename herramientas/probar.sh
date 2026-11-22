@@ -78,7 +78,7 @@ en_php() {
 }
 
 printf '[probar] imagen de pruebas\n'
-docker build --quiet --tag "$imagen_php" "$raiz/deploy/pruebas" >/dev/null
+docker build --quiet --file "$raiz/deploy/api/Dockerfile" --target pruebas --tag "$imagen_php" "$raiz" >/dev/null
 
 if [ "${PROBAR_SIN_RED:-0}" = "1" ]; then
     [ -f "$raiz/api/vendor/autoload.php" ] \

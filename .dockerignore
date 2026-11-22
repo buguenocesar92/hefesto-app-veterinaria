@@ -1,0 +1,41 @@
+# =============================================================================
+# Que entra en el contexto de construccion de las imagenes
+# =============================================================================
+# El contexto es la RAIZ del repo (ver deploy/docker-compose.prod.yml:
+# `context: ..`). Sin este archivo entraban en la imagen el `api/vendor/` y el
+# `api/tests/` del equipo, el `.env` con los secretos y el
+# `api/bootstrap/cache/*.php` que genera una instalacion local: el build
+# fallaba con 'Class "NunoMaduro\Collision\Adapters\Laravel\CollisionServiceProvider"
+# not found', porque el manifiesto de paquetes de la maquina citaba un paquete
+# de desarrollo que la imagen no instala.
+#
+# Lo que se excluye aqui es lo que la imagen construye por su cuenta.
+# =============================================================================
+
+# El historial y lo que no es codigo.
+.git
+.github
+.superpowers
+
+# Secretos: NUNCA dentro de una imagen. El `.env.example` si se publica, para
+# que se pueda ver que variables espera la aplicacion.
+.env
+**/.env
+**/.env.*
+!**/.env.example
+
+# Dependencias que instala la propia imagen: si entran las del equipo, la
+# imagen lleva lo que el equipo tenia, no lo que declara `composer.lock`.
+api/vendor
+web/node_modules
+
+# Lo que la suite y el build generan en la maquina.
+api/tests
+api/.phpunit.cache
+api/storage/logs/*
+api/storage/framework/views/*.php
+api/bootstrap/cache/*.php
+
+# La interfaz (Nuxt): sus artefactos de build no van en la imagen.
+web/.nuxt
+web/.output

@@ -5,6 +5,15 @@ Este es el primer documento que hay que leer antes de opinar sobre el código.
 > **Actualización (2026-11-14):** `api/` ya se ejecutó. El resultado real está
 > en [ESTADO-REAL.md](ESTADO-REAL.md). Lo que sigue describe el estado anterior
 > y sigue valiendo para `web/` y `deploy/`.
+>
+> **Actualización (2026-11-22):** la imagen de la API se construyó y se
+> verificó: `deploy/api/Dockerfile` ahora tiene etapas (`pruebas`,
+> `dependencias` y la final), la imagen final no lleva dependencias de
+> desarrollo y arranca con la configuración **solo por variables de entorno**
+> (migra y responde 200 en `/api/v1/salud`). La imagen de las pruebas es la
+> etapa `pruebas` del mismo Dockerfile. El comando que lo comprueba es
+> `bash herramientas/verificar_imagen.sh`. Ver
+> [ESTADO-REAL.md](ESTADO-REAL.md).
 
 ## Estado
 
@@ -164,6 +173,18 @@ de un proveedor OIDC generico.
 
 ## Como correrlas
 
+El comando unico, el que usa el CI, levanta un PostgreSQL desechable, corre
+las migraciones y compara el resultado con la lista de fallos conocidos:
+
+```bash
+bash herramientas/probar.sh
+```
+
+La imagen que usa es la etapa `pruebas` de `deploy/api/Dockerfile`: la misma
+serie de PHP y las mismas mitigaciones que la imagen de produccion.
+
+Con PHP y Composer en el equipo:
+
 ```bash
 cd api
 composer install
@@ -193,11 +214,11 @@ php artisan clinica:verificar-aislamiento
 |---|---|
 | **Ejecutar las pruebas** | **no hay PHP ni Docker en este entorno** |
 | **Ejecutar las migraciones** | idem |
-| **Construir las imagenes** | idem |
+| **Construir las imagenes** | la de la API **si** (2026-11-22, `bash herramientas/verificar_imagen.sh`); la de la interfaz, no |
 | `npm run build` de la interfaz | idem |
 | Tipo de la interfaz (`nuxt typecheck`) | idem |
 | Pruebas de la interfaz | **no hay ninguna escrita** |
-| Verificar que la API arranca con el entrypoint | idem |
+| Verificar que la API arranca con el entrypoint | **hecho** el 2026-11-22: la imagen final arranca con la configuracion solo por variables de entorno, migra y responde 200 en `/api/v1/salud` |
 
 ### Integraciones sin verificar
 

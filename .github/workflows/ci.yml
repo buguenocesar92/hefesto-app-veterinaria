@@ -40,3 +40,6 @@ jobs:
 
       - name: Verificacion de api/
         run: bash herramientas/probar.sh
+
+      - name: Imagen de produccion
+        run: bash herramientas/verificar_imagen.sh
