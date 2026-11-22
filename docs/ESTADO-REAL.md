@@ -4,8 +4,9 @@ Este documento reemplaza, para `api/`, la frase «código escrito, sin ejecutar�
 de [10-PRUEBAS-Y-ESTADO.md](10-PRUEBAS-Y-ESTADO.md). Todo lo que dice salió de
 una ejecución; lo que no se ejecutó está marcado como **no verificado**.
 
-- **Medido el:** 2026-11-21, sobre `fix/imagen-y-tests` en `3ce87a0` (mas el
-  arreglo de G1 de este mismo cambio).
+- **Medido el:** 2026-11-22, sobre `fix/imagen-y-tests` (con el arranque de G1 ya
+  corregido, y con la cola, el ejemplo de entorno y el aviso de mbstring
+  arreglados en el mismo cambio).
 - **Con:** PHP 8.4.28 (etapa `pruebas` de `deploy/api/Dockerfile`),
   PostgreSQL 18.6, Laravel 13.42.0, PHPUnit 13.4.7 (versiones de
   `api/composer.lock`).
@@ -23,7 +24,7 @@ una ejecución; lo que no se ejecutó está marcado como **no verificado**.
 | ¿Migra? | Sí, las 19 migraciones, después de corregir 3. |
 | ¿El aislamiento por RLS funciona? | Sí: las 20 pruebas de la suite `Aislamiento` menos una pasan, y `clinica:verificar-aislamiento` sale con 0. |
 | ¿Alguien puede iniciar sesión? | **No.** Ver G2 y G6. |
-| ¿La suite pasa? | 82 de 92. Los 10 que no pasan tienen 6 causas conocidas (G2 a G7). |
+| ¿La suite pasa? | 85 de 95. Los 10 que no pasan tienen 6 causas conocidas (G2 a G7). |
 
 ## Qué hubo que corregir para que arrancara
 
@@ -52,7 +53,9 @@ la suite.
 |---|---:|---:|---:|
 | Suite heredada | 82 | 72 | 10 |
 | Casos frontera de la suma de meses (`SumarMesesCasosFronteraTest`) | 10 | 10 | 0 |
-| **Total** | **92** | **82** | **10** |
+| Tablas de la cola (`TablasDeColaTest`) | 2 | 2 | 0 |
+| Ejemplo de entorno (`EjemploDeEntornoSeCargaTest`) | 1 | 1 | 0 |
+| **Total** | **95** | **85** | **10** |
 
 Ninguna prueba se omite. Las 10 que no pasan están, una por línea, en
 `api/tests/fallos-conocidos.txt`.
@@ -98,7 +101,7 @@ Consecuencias que no son una prueba:
 
 - **Ninguna prueba original hace una petición HTTP.** Las 57 rutas, los 19
   controladores y los tres middleware propios no se ejecutan en ninguna de las
-  67 pruebas. Lo único que hoy ejercita el enrutador es `ArranqueTest`
+  95 pruebas. Lo único que hoy ejercita el enrutador es `ArranqueTest`
   (`/api/v1/salud` responde 200; una ruta protegida sin sesión responde 401 en
   JSON).
 - **`APP_TIMEZONE` no tiene efecto.** No hay `config/app.php`; Laravel usa el
@@ -117,7 +120,9 @@ Consecuencias que no son una prueba:
   que no lleva dependencias de desarrollo, ni Composer, ni `tests/`, ni `.env`,
   y la **arranca** contra un PostgreSQL desechable con la configuración solo
   por variables de entorno: migra, responde 200 en `/api/v1/salud` a través de
-  nginx y php-fpm, y el worker de colas también arranca.
+  nginx y php-fpm, y el worker de colas arranca, **sigue vivo** después de tres
+  sondeos de la cola (10 s) y **no registra errores ni avisos de PHP**. Esa
+  última comprobación es la que detectaba que faltaban las tablas de la cola.
 - **El `docker-compose.prod.yml` no se pudo validar en este entorno.**
   `docker compose -f deploy/docker-compose.prod.yml config --quiet` sale con
   **1** (2026-11-22) por falta de la configuración local, no por un defecto
