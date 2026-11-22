@@ -6,7 +6,8 @@
 # ANTES DE LEVANTAR ESTO
 #   1. Copie `api/.env.example` a `api/.env` y complete los valores.
 #   2. Genere APP_KEY:
-#      `docker compose -f deploy/docker-compose.prod.yml run --rm api php artisan key:generate`
+#      `docker compose -f deploy/docker-compose.prod.yml run --rm --no-deps --entrypoint php api artisan key:generate --show`
+#      y copie la salida a `APP_KEY=` de `api/.env` (ver docs/04).
 #   3. Corra las migraciones y la semilla (ver docs/04).
 #   4. Corra `php artisan clinica:verificar-aislamiento` (ver docs/03).
 #
