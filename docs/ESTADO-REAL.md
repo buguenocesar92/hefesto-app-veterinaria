@@ -101,7 +101,7 @@ Consecuencias que no son una prueba:
 
 - **Ninguna prueba original hace una petición HTTP.** Las 57 rutas, los 19
   controladores y los tres middleware propios no se ejecutan en ninguna de las
-  95 pruebas. Lo único que hoy ejercita el enrutador es `ArranqueTest`
+  67 pruebas originales (de las 95 de hoy). Lo único que hoy ejercita el enrutador es `ArranqueTest`
   (`/api/v1/salud` responde 200; una ruta protegida sin sesión responde 401 en
   JSON).
 - **`APP_TIMEZONE` no tiene efecto.** No hay `config/app.php`; Laravel usa el
