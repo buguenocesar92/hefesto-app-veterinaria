@@ -20,7 +20,7 @@ una ejecución; lo que no se ejecutó está marcado como **no verificado**.
 |---|---|
 | ¿Instala? | Sí. `composer.json` resolvía tal cual: las versiones declaradas existen. Faltaban dos dependencias de desarrollo. |
 | ¿Arranca? | Sí, después de agregar el esqueleto de Laravel y registrar los proveedores. 57 rutas. |
-| ¿Migra? | Sí, las 19 migraciones, después de corregir 3. |
+| ¿Migra? | Sí, las 18 migraciones, después de corregir 3. |
 | ¿El aislamiento por RLS funciona? | Sí: las 20 pruebas de la suite `Aislamiento` menos una pasan, y `clinica:verificar-aislamiento` sale con 0. |
 | ¿Alguien puede iniciar sesión? | **No.** Ver G2 y G6. |
 | ¿La suite pasa? | 82 de 92. Los 10 que no pasan tienen 6 causas conocidas (G2 a G7). |
@@ -42,8 +42,6 @@ la suite.
 | 8 | La suite `Feature` repetía los archivos de `Aislamiento` y `Permisos` | `api/phpunit.xml` | 6 avisos `Cannot add file … as it was already added to test suite "Feature"` |
 | 9 | `verificar_referencias.py` recorría `api/vendor` | `herramientas/` | falso positivo en cuanto se instalan dependencias |
 | 10 | `sumarMeses` llamaba a `addMonthsNoOverflow()`, que es API de Carbon, sobre un `DateTimeImmutable` | `api/app/Services/Vacunas/CalculadorDeProximaDosis.php:95` | `Call to undefined method DateTimeImmutable::addMonthsNoOverflow()` |
-| 11 | La cola de Laravel no tenía tabla: con `QUEUE_CONNECTION=database` el worker se levanta y falla cada tres segundos | `api/database/migrations/2026_11_22_000019_crear_tabla_colas.php` | `relation "jobs" does not exist` |
-| 12 | `AUTHENTIK_SCOPES` sin comillas en el ejemplo: al copiar `api/.env.example` a `api/.env`, `phpdotenv` rechaza el valor con espacios y **todo comando de artisan falla** | `api/.env.example:118` | `Failed to parse dotenv file. Encountered unexpected whitespace at [openid profile email]` |
 
 ## Resultado de la suite
 
@@ -117,15 +115,26 @@ Consecuencias que no son una prueba:
   y la **arranca** contra un PostgreSQL desechable con la configuración solo
   por variables de entorno: migra, responde 200 en `/api/v1/salud` a través de
   nginx y php-fpm, y el worker de colas también arranca.
-- **El `docker-compose.prod.yml` sí se validó, con la configuración local.**
-  `docker compose -f deploy/docker-compose.prod.yml config --quiet` sale con 0
-  (2026-11-22), pero solo si existen los tres `.env` que el archivo de Compose
-  espera: `api/.env` y `.env` (raiz) como `env_file`, y `deploy/.env` para
-  interpolar `${...}`. Compose lee ese último del **directorio del archivo de
-  Compose**, que es `deploy/`, no de la raíz del repositorio: con el `.env` de
-  la raíz solamente, la validación falla con `required variable DOMINIO is
-  missing a value`. No es un defecto del archivo de Compose, es que el `.env`
-  no estaba donde Compose lo busca. Ver [04](04-INSTALACION.md).
+- **El `docker-compose.prod.yml` no se pudo validar en este entorno.**
+  `docker compose -f deploy/docker-compose.prod.yml config --quiet` sale con
+  **1** (2026-11-22) por falta de la configuración local, no por un defecto
+  del archivo de Compose. Salida literal:
+
+  ```text
+  error while interpolating services.caddy.environment.ACME_EMAIL: required variable ACME_EMAIL is missing a value: falta ACME_EMAIL en .env
+  error while interpolating services.caddy.environment.DOMINIO: required variable DOMINIO is missing a value: falta DOMINIO en .env
+  error while interpolating services.postgres.environment.APP_DB_PASSWORD: required variable DB_PASSWORD is missing a value: falta DB_PASSWORD en api/.env
+  error while interpolating services.postgres.environment.POSTGRES_PASSWORD: required variable DB_ADMIN_PASSWORD is missing a value: falta DB_ADMIN_PASSWORD en el .env.prod
+  ```
+
+  Son las cuatro variables que el archivo de Compose interpola con `${...}`
+  (`DOMINIO`, `ACME_EMAIL`, `DB_PASSWORD`, `DB_ADMIN_PASSWORD`) más el
+  `env_file` de `api/.env`. **Ojo:** Compose busca el `.env` de interpolación
+  en el **directorio del proyecto de Compose** —el del archivo de Compose, que
+  es `deploy/`—, no en la raíz del repositorio: con el `.env` de la raíz
+  solamente, la validación sigue fallando. El `docker-compose.prod.yml` **no
+  se tocó** (queda fuera del alcance del plan): dejar el procedimiento de
+  instalación y el archivo de Compose de acuerdo es una pasada aparte.
 - **No verificado:** los `compose` completos (el arranque verificado es el del
   contenedor, no el del `docker compose up`), el flujo OIDC contra Authentik,
   `web/` y los respaldos.
