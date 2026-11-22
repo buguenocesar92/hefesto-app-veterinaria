@@ -119,6 +119,21 @@ La tabla `clinicas` guarda `id`, `slug`, `nombre`, `zona_horaria`,
 ni teléfono, ni RUT, ni razón social. Tampoco hay datos de pacientes ni de mascotas
 en esta tabla, así que leerla antes del ingreso no expone fichas clínicas.
 
+**La misma excepcion, sin datos de pacientes: `jobs` y `failed_jobs`.** Son las
+tablas de la cola (migracion `2026_11_22_000019`) y **no llevan RLS**, por el
+mismo motivo que `clinicas`: el worker recoge el trabajo de la cola antes de
+saber de que clinica es, asi que la lectura ocurre fuera del contexto de
+clinica y con la politica de `tenant_id` no veria ningun trabajo. La cola es
+global, no es una tabla de negocio: hoy la aplicacion no encola nada, y el
+contexto de clinica se fija DENTRO del trabajo, nunca antes. Si alguna vez se
+encolaran trabajos con datos de salud, esas tablas habrian de revisarse con el
+mismo cuidado que `clinicas`.
+
+`failed_jobs` hace falta **tambien con `QUEUE_CONNECTION=redis`**: Laravel
+registra ahi los trabajos fallidos por defecto (el proveedor `database-uuids`),
+sea cual sea la conexion de la cola. `jobs`, en cambio, solo se usa cuando la
+cola va por la conexion `database`.
+
 La vista `vw_clinicas_publicas` **existe** (migración `2026_10_17_000018`, que
 expone `slug`, `nombre` y `activo` de las clínicas activas) y **queda sin uso**: el
 código de ejecución nunca la consulta. Solo aparece en

@@ -20,7 +20,7 @@ una ejecución; lo que no se ejecutó está marcado como **no verificado**.
 |---|---|
 | ¿Instala? | Sí. `composer.json` resolvía tal cual: las versiones declaradas existen. Faltaban dos dependencias de desarrollo. |
 | ¿Arranca? | Sí, después de agregar el esqueleto de Laravel y registrar los proveedores. 57 rutas. |
-| ¿Migra? | Sí, las 18 migraciones, después de corregir 3. |
+| ¿Migra? | Sí, las 19 migraciones, después de corregir 3. |
 | ¿El aislamiento por RLS funciona? | Sí: las 20 pruebas de la suite `Aislamiento` menos una pasan, y `clinica:verificar-aislamiento` sale con 0. |
 | ¿Alguien puede iniciar sesión? | **No.** Ver G2 y G6. |
 | ¿La suite pasa? | 82 de 92. Los 10 que no pasan tienen 6 causas conocidas (G2 a G7). |
@@ -42,6 +42,7 @@ la suite.
 | 8 | La suite `Feature` repetía los archivos de `Aislamiento` y `Permisos` | `api/phpunit.xml` | 6 avisos `Cannot add file … as it was already added to test suite "Feature"` |
 | 9 | `verificar_referencias.py` recorría `api/vendor` | `herramientas/` | falso positivo en cuanto se instalan dependencias |
 | 10 | `sumarMeses` llamaba a `addMonthsNoOverflow()`, que es API de Carbon, sobre un `DateTimeImmutable` | `api/app/Services/Vacunas/CalculadorDeProximaDosis.php:95` | `Call to undefined method DateTimeImmutable::addMonthsNoOverflow()` |
+| 11 | Las tablas de la cola de Laravel (`jobs` y `failed_jobs`) no tenían migración: con `QUEUE_CONNECTION=database` (el valor por defecto de Laravel) el worker no tenía dónde leer los trabajos, y `failed_jobs` falta con cualquier conexión, porque Laravel registra ahí los trabajos fallidos | `api/database/migrations/2026_11_22_000019_crear_tabla_colas.php` | `SQLSTATE[42P01]: Undefined table: 7 ERROR: relation "jobs" does not exist`, cada 3 s en el registro del worker |
 
 ## Resultado de la suite
 
