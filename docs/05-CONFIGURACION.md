@@ -2,19 +2,24 @@
 
 Cada variable, que hace y por que importa.
 
-Los tres `.env.example` vienen **sin valores reales**. Este documento explica
+Los cuatro `.env.example` vienen **sin valores reales**. Este documento explica
 que hay que poner en cada uno.
 
-## Los tres archivos
+## Los cuatro archivos
 
 | Archivo | Para que es |
 |---|---|
 | `api/.env` | La API (Laravel): base de datos, Authentik, reglas |
 | `.env` (raiz) | El despliegue: dominio y correo de Caddy |
+| `deploy/.env` | Las variables que Compose sustituye en `${...}`: las lee del directorio del archivo de Compose, que es `deploy/` |
 | `web/.env` | La interfaz (Nuxt): solo la URL interna de la API |
 
-`deploy/docker-compose.prod.yml` lee `api/.env` para el servicio `caddy`, y
-`.env` (raiz) para el dominio. No se mezclan.
+`deploy/docker-compose.prod.yml` toma de `api/.env` la configuración de
+PostgreSQL, de la API y del worker (`env_file`), y de `.env` (raiz) la de
+Caddy. `deploy/.env` no se lo entrega a ningún servicio: sirve para interpolar
+`${DOMINIO}`, `${ACME_EMAIL}`, `${DB_PASSWORD}` y `${DB_ADMIN_PASSWORD}`. Las
+contraseñas de `deploy/.env` tienen que ser las mismas de `api/.env`. No se
+mezclan los roles: cada archivo va a lo suyo.
 
 ## Aplicación
 

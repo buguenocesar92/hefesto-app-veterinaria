@@ -23,14 +23,32 @@ de los contenedores.
 ## 2. Configurar el `.env`
 
 ```bash
-cd apps/veterinaria
+# Desde la raíz del repositorio
 cp api/.env.example api/.env
 cp .env.example .env
+cp deploy/.env.example deploy/.env
 cp web/.env.example web/.env
 ```
 
-Los tres archivos vienen **sin valores reales**. Hay que completarlos. Ver
+Los cuatro archivos vienen **sin valores reales**. Hay que completarlos. Ver
 [05](05-CONFIGURACION.md) para que significa cada uno.
+
+**Por qué el de `deploy/`:** Compose lee las variables que sustituyen a
+`${...}` en `docker-compose.prod.yml` (`DOMINIO`, `ACME_EMAIL`,
+`DB_PASSWORD`, `DB_ADMIN_PASSWORD`) del **directorio del proyecto de
+Compose**, que es `deploy/` (donde vive el archivo de Compose), no de la raíz
+del repositorio. Sin ese archivo, `docker compose ... config` falla antes de
+arrancar nada:
+
+```bash
+docker compose -f deploy/docker-compose.prod.yml config --quiet
+```
+
+Las contraseñas de `deploy/.env` tienen que ser **las mismas** que las de
+`api/.env` (`DB_PASSWORD` y `DB_ADMIN_PASSWORD`): si difieren, PostgreSQL le
+entrega a la aplicación una contraseña que no es la que ella usa.
+
+Los `.env` no se versionan (ver `.gitignore`); los `.env.example` sí.
 
 Lo minimo para que arranque:
 

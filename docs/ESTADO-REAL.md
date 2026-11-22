@@ -116,6 +116,15 @@ Consecuencias que no son una prueba:
   y la **arranca** contra un PostgreSQL desechable con la configuración solo
   por variables de entorno: migra, responde 200 en `/api/v1/salud` a través de
   nginx y php-fpm, y el worker de colas también arranca.
+- **El `docker-compose.prod.yml` sí se validó, con la configuración local.**
+  `docker compose -f deploy/docker-compose.prod.yml config --quiet` sale con 0
+  (2026-11-22), pero solo si existen los tres `.env` que el archivo de Compose
+  espera: `api/.env` y `.env` (raiz) como `env_file`, y `deploy/.env` para
+  interpolar `${...}`. Compose lee ese último del **directorio del archivo de
+  Compose**, que es `deploy/`, no de la raíz del repositorio: con el `.env` de
+  la raíz solamente, la validación falla con `required variable DOMINIO is
+  missing a value`. No es un defecto del archivo de Compose, es que el `.env`
+  no estaba donde Compose lo busca. Ver [04](04-INSTALACION.md).
 - **No verificado:** los `compose` completos (el arranque verificado es el del
   contenedor, no el del `docker compose up`), el flujo OIDC contra Authentik,
   `web/` y los respaldos.

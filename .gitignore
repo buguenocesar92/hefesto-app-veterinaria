@@ -1,0 +1,14 @@
+# =============================================================================
+# Hefesto Studio — VeterinariaHefesto
+# =============================================================================
+# Los archivos de configuración local llevan claves y NUNCA se versionan.
+# Los ejemplos (`.env.example`) sí: son la lista de variables que espera cada
+# pieza.
+#
+# El `.env` de la raíz lo usa Caddy (`env_file`), el de `api/` lo usan
+# PostgreSQL, la API y el worker, y el de `deploy/` lo usa Compose para
+# interpolar `${...}`. Ver docs/04-INSTALACION.md.
+/.env
+api/.env
+deploy/.env
+web/.env
