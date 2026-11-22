@@ -28,7 +28,7 @@ mezclan los roles: cada archivo va a lo suyo.
 | `APP_ENV` | `local` | `production` en producción |
 | `APP_DEBUG` | `false` | **En producción tiene que ser `false`.** El registro con nivel `debug` puede incluir el cuerpo de una peticion, y eso incluye fichas |
 | `APP_TIMEZONE` | `America/Santiago` | Zona por omision. Cada clinica tiene la suya |
-| `APP_KEY` | *(vacio)* | Generela con `php artisan key:generate`. El arranque **se detiene** si esta vacia |
+| `APP_KEY` | *(vacio)* | Generela **fuera** del arranque: `docker compose -f deploy/docker-compose.prod.yml run --rm --no-deps --entrypoint php api artisan key:generate --show` (ver [04](04-INSTALACION.md), sección 4). El arranque **se detiene** si esta vacia o si no tiene el formato `base64:` |
 
 ## Base de datos
 
