@@ -5,6 +5,10 @@ De cero a la primera pantalla con datos.
 > En el entorno donde se escribio esta aplicación **no habia PHP, ni Composer,
 > ni Docker**. Nada de lo que hay en este documento se ejecuto. Ver
 > [10](10-PRUEBAS-Y-ESTADO.md).
+>
+> **Actualización (2026-11-22):** la imagen de la API sí se construyó y se
+> verificó (arranca con la configuración por variables de entorno, migra y
+> responde). Ver [ESTADO-REAL.md](ESTADO-REAL.md).
 
 ## 1. Requisitos
 
@@ -19,7 +23,7 @@ de los contenedores.
 ## 2. Configurar el `.env`
 
 ```bash
-cd apps/veterinaria
+# Desde la raíz del repositorio
 cp api/.env.example api/.env
 cp .env.example .env
 cp web/.env.example web/.env
@@ -70,22 +74,27 @@ alcanzan desde afuera de la red de Compose.
 ## 4. Generar la clave de la aplicación
 
 ```bash
-docker compose -f deploy/docker-compose.prod.yml run --rm api php artisan key:generate
+docker compose -f deploy/docker-compose.prod.yml run --rm --no-deps \
+  --entrypoint php api artisan key:generate --show
 ```
 
-Genera `APP_KEY` y la deja en el `.env` **dentro del contenedor**. Para que
-persista, hay que copiarla al `api/.env` del host:
+Copia la salida (una línea que empieza por `base64:`) a `APP_KEY=` en
+`api/.env` y vuelve a levantar.
 
-```bash
-docker compose -f deploy/docker-compose.prod.yml run --rm api \
-  grep '^APP_KEY=' .env
-```
+Por qué con `--entrypoint php`: el `entrypoint.sh` **se detiene si `APP_KEY`
+no es válida**, y una clave válida es la que empieza por `base64:` seguida de
+32 bytes en base64. Sin ese `--entrypoint`, el comando para generar la clave
+nunca llega a correr en un contenedor que todavía no tiene clave. Por eso el
+procedimiento es: generar la clave **fuera** del arranque, y ponerla en
+`api/.env` antes de levantar.
 
-Copia ese valor a `api/.env` y vuelve a levantar.
+El contenedor no necesita un `.env` dentro: `env_file` le entrega la
+configuración como variables de entorno. El `entrypoint.sh` busca la clave en
+el entorno y, solo si no está, en un `.env` que se haya montado a mano.
 
-El `entrypoint.sh` **se detiene si `APP_KEY` esta vacio**. Es a propósito: una
-aplicación sin clave de cifrado de cookie tiene las sesiones firmadas con una
-clave vacia, que cualquiera puede replicar.
+Es a propósito que el arranque se detenga: una aplicación sin clave de cifrado
+de cookie tiene las sesiones firmadas con una clave vacia, que cualquiera puede
+replicar.
 
 ## 5. Migraciones y semilla
 

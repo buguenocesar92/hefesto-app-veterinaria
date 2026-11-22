@@ -23,7 +23,7 @@ que hay que poner en cada uno.
 | `APP_ENV` | `local` | `production` en producción |
 | `APP_DEBUG` | `false` | **En producción tiene que ser `false`.** El registro con nivel `debug` puede incluir el cuerpo de una peticion, y eso incluye fichas |
 | `APP_TIMEZONE` | `America/Santiago` | Zona por omision. Cada clinica tiene la suya |
-| `APP_KEY` | *(vacio)* | Generela con `php artisan key:generate`. El arranque **se detiene** si esta vacia |
+| `APP_KEY` | *(vacio)* | Generela **fuera** del arranque: `docker compose -f deploy/docker-compose.prod.yml run --rm --no-deps --entrypoint php api artisan key:generate --show` (ver [04](04-INSTALACION.md), sección 4). El arranque **se detiene** si esta vacia o si no tiene el formato `base64:` |
 
 ## Base de datos
 
@@ -108,7 +108,7 @@ arrancaria y cada peticion crearia su sesión sin persistirla.
 | `AUTHENTIK_CLIENT_ID` | Cliente OIDC **exclusivo de esta aplicación**, para poder revocarlo sin tocar las demas |
 | `AUTHENTIK_CLIENT_SECRET` | |
 | `AUTHENTIK_REDIRECT_URI` | Debe coincidir **exactamente** con lo configurado en Authentik |
-| `AUTHENTIK_SCOPES` | `openid profile email`. Sin `openid`, Authentik no devuelve `id_token` |
+| `AUTHENTIK_SCOPES` | `openid profile email`. Sin `openid`, Authentik no devuelve `id_token`. **Va entre comillas** en `api/.env`: tiene espacios, y phpdotenv rechaza el archivo entero si no |
 | `AUTHENTIK_ALGORITMO` | `RS256`. Se comprueba **antes** de la firma: corta el ataque de confusion de algoritmo |
 | `AUTHENTIK_CACHE_JWKS` | `86400`. Las claves rotan pocas veces |
 | `AUTHENTIK_LEEWAY` | `60`. Margen de reloj para `exp`, `iat` y `nbf` |

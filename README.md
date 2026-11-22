@@ -191,7 +191,10 @@ cp web/.env.example web/.env
 # complete los valores (docs/04 y docs/05)
 
 docker compose -f deploy/docker-compose.prod.yml up -d --build
-docker compose -f deploy/docker-compose.prod.yml run --rm api php artisan key:generate
+# La clave se genera FUERA del arranque: el entrypoint no deja arrancar sin
+# una clave valida (docs/04, seccion 4). Copia la salida a APP_KEY= de api/.env.
+docker compose -f deploy/docker-compose.prod.yml run --rm --no-deps \
+  --entrypoint php api artisan key:generate --show
 docker compose -f deploy/docker-compose.prod.yml exec api php artisan migrate --force
 docker compose -f deploy/docker-compose.prod.yml exec api php artisan db:seed --force
 

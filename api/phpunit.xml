@@ -10,9 +10,10 @@
       - `Permisos`: dentro de la clinica, quien puede abrir una ficha clinica
         y quien no.
       - `Unit`: logica pura, sin base de datos.
+      - `Colas`: las tablas de la cola de Laravel (`jobs` y `failed_jobs`).
 
     Se pueden correr solas, con la opcion `testsuite` de artisan:
-        Aislamiento, Permisos, Unit
+        Aislamiento, Permisos, Unit, Colas
 
     (La opcion se escribe con dos guiones, pero no puede aparecer aqui: XML
     prohibe el doble guion dentro de un comentario, y este archivo es XML.)
@@ -29,14 +30,19 @@
         <testsuite name="Unit">
             <directory>tests/Unit</directory>
         </testsuite>
-        <testsuite name="Feature">
-            <directory>tests/Feature</directory>
-        </testsuite>
         <testsuite name="Aislamiento">
             <directory>tests/Feature/Aislamiento</directory>
         </testsuite>
         <testsuite name="Permisos">
             <directory>tests/Feature/Permisos</directory>
+        </testsuite>
+        <!--
+            `Colas` es un archivo suelto en `tests/Feature`, fuera de los dos
+            grupos de arriba. Se nombra aqui porque, si no, ninguna suite lo
+            recoge y el archivo nunca se corre.
+        -->
+        <testsuite name="Colas">
+            <file>tests/Feature/TablasDeColaTest.php</file>
         </testsuite>
     </testsuites>
     <source>

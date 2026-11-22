@@ -1,0 +1,34 @@
+# Pruebas que HOY no pasan, agrupadas por causa. La explicacion de cada grupo
+# esta en docs/ESTADO-REAL.md.
+#
+# herramientas/probar.sh sale con 0 solo si los fallos de la suite son
+# exactamente estos. Al arreglar una causa, se borran sus lineas en el mismo
+# cambio; nunca se agrega una linea para tapar un fallo nuevo sin anotarlo en
+# docs/ESTADO-REAL.md.
+
+# G2. App\Models\Usuario extiende Model: no es Authenticatable ni Authorizable
+#     (no tiene can() y el guard de sesion no lo acepta).
+Tests\Feature\Permisos\RolesYFichaClinicaTest::test_solo_el_profesional_abre_la_ficha_clinica
+Tests\Feature\Permisos\RolesYFichaClinicaTest::test_recepcion_ve_la_identificacion_pero_no_el_historial
+Tests\Feature\Permisos\RolesYFichaClinicaTest::test_solo_el_profesional_prescribe_y_aplica_vacunas
+Tests\Feature\Permisos\RolesYFichaClinicaTest::test_el_calendario_de_vacunas_es_mas_abierto_que_la_ficha_clinica
+Tests\Unit\DefectosDeArranqueTest::test_el_modelo_usuario_sirve_para_iniciar_sesion
+
+# G3. La prueba usa un enum como clave de un arreglo (TypeError de PHP).
+Tests\Feature\Permisos\RolesYFichaClinicaTest::test_los_cuatro_roles_tienen_las_capacidades_que_corresponden
+
+# G4. La prueba hace refresh() de un Usuario fuera del contexto de clinica y la
+#     RLS lo rechaza.
+Tests\Feature\Permisos\RolesYFichaClinicaTest::test_desactivar_un_usuario_se_guarda_y_el_ingreso_lo_rechaza
+
+# G5. La prueba espera las columnas de vw_clinicas_publicas en orden alfabetico
+#     y la consulta las devuelve en el orden de la vista.
+Tests\Feature\Aislamiento\RowLevelSecurityTest::test_la_vista_de_clinicas_publicas_no_expone_datos_personales
+
+# G6. SessionServiceProvider registra el manejador `database` con una firma de
+#     dos parametros; Laravel le pasa uno.
+Tests\Unit\DefectosDeArranqueTest::test_el_manejador_de_sesion_database_se_puede_construir
+
+# G7. Sin sesion y sin `Accept: application/json` el middleware `auth` busca
+#     una ruta llamada `login` que no existe y responde 500.
+Tests\Unit\DefectosDeArranqueTest::test_una_ruta_protegida_sin_sesion_no_responde_500_a_un_navegador

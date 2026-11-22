@@ -101,9 +101,9 @@ return new class extends Migration
          * horario; si mas adelante se quiere impedirlo tambien, se agrega el
          * estado a la predicacion.
          */
-        DB::statement(<<<'SQL'
-            CREATE EXTENSION IF NOT EXISTS btree_gist;
+        DB::statement('CREATE EXTENSION IF NOT EXISTS btree_gist');
 
+        DB::statement(<<<'SQL'
             ALTER TABLE citas ADD CONSTRAINT citas_sin_solapamiento
             EXCLUDE USING gist (
                 profesional_id WITH =,

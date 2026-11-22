@@ -12,6 +12,14 @@
 # olvida. El bloqueo de PostgreSQL hace que dos replicas arrancando a la vez no
 # corran migraciones en paralelo.
 #
+# LA CONFIGURACION LLEGA POR VARIABLES DE ENTORNO
+# -----------------------------------------------
+# El contenedor NO necesita un archivo `.env` dentro: compose entrega la
+# configuracion con `env_file` (deploy/docker-compose.prod.yml), que son
+# variables de entorno. Por eso el `.env` no se exige, y por eso la clave de
+# la aplicacion se busca primero en el entorno y solo despues en un `.env` que
+# se haya montado a mano.
+#
 # LAS PALABRAS CLAVE DE SHELL NO SE TRADUCEN
 # ------------------------------------------
 # `until`, `while`, `for`, `do`, `done`, `case`, `esac`, `if`, `then`, `else`,
@@ -26,13 +34,26 @@ set -eu
 
 cd /var/www/html
 
-if [ ! -f .env ]; then
-    echo "VeterinariaHefesto: falta el archivo .env. Copie api/.env.example y complete los valores." >&2
-    exit 1
+# -----------------------------------------------------------------------------
+# LA CLAVE DE LA APLICACION
+# -----------------------------------------------------------------------------
+# La clave tiene que ser VALIDA: el prefijo `base64:` con 32 bytes en base64.
+# `APP_KEY=base64:` (la clave vacia) es el error mas comun: la aplicacion
+# levanta, pero las cookies van firmadas con una clave que cualquiera puede
+# replicar. Por eso se comprueba el formato, no solo que exista.
+#
+# El mensaje dice COMO arreglarlo, porque un contenedor que no arranca sin
+# explicacion es un contenedor que nadie sabe apagar.
+clave="${APP_KEY:-}"
+if [ -z "$clave" ] && [ -f .env ]; then
+    clave="$(sed -n 's/^APP_KEY=//p' .env | tail -n 1 | tr -d '"\r ')"
 fi
 
-if ! grep -q '^APP_KEY=base64:' .env; then
-    echo "VeterinariaHefesto: APP_KEY vacio. Ejecute 'php artisan key:generate' y guarde el resultado." >&2
+if ! printf '%s' "$clave" | grep -Eq '^base64:[A-Za-z0-9+/]{43}=$'; then
+    echo "VeterinariaHefesto: APP_KEY no esta o no es valida." >&2
+    echo "Generela con:" >&2
+    echo "  docker compose -f deploy/docker-compose.prod.yml run --rm --no-deps --entrypoint php api artisan key:generate --show" >&2
+    echo "y copie la salida a APP_KEY= en api/.env (o exporte APP_KEY en el entorno del contenedor)." >&2
     exit 1
 fi
 
@@ -50,9 +71,10 @@ until php artisan db:show --json > /dev/null 2>&1; do
     sleep 2
 done
 
+# El contenedor corre como `appuser` y los directorios ya son suyos desde la
+# imagen: no hay nada que cambiar de propietario, y `chown` pediria root.
 echo "VeterinariaHefesto: preparando permisos..."
 mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views storage/logs
-chown -R www-data:www-data storage bootstrap/cache
 
 echo "VeterinariaHefesto: limpiando caches..."
 php artisan config:clear --quiet

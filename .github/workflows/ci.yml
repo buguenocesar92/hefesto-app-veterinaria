@@ -1,0 +1,45 @@
+name: CI
+
+# Corre la verificacion unica de `api/` (herramientas/probar.sh): instala,
+# migra en un PostgreSQL desechable y compara la suite con los fallos
+# conocidos. No despliega ni publica nada.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Solo lectura: ningun paso escribe en el repo ni usa secretos.
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  api:
+    name: api (migraciones + suite)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Verificaciones estaticas
+        run: |
+          python3 herramientas/verificar_caracteres.py
+          python3 herramientas/verificar_estructura.py
+          python3 herramientas/verificar_php_basico.py
+          python3 herramientas/verificar_referencias.py
+
+      - name: Pruebas de las herramientas
+        run: python3 -m unittest discover -s herramientas -p 'test_*.py'
+
+      - name: Verificacion de api/
+        run: bash herramientas/probar.sh
+
+      - name: Imagen de produccion
+        run: bash herramientas/verificar_imagen.sh

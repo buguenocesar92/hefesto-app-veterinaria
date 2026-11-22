@@ -18,14 +18,29 @@
 # fuera de una transaccion.
 #
 # Ver docs/03.
+#
+# LA CLAVE DE LA APLICACION
+# -------------------------
+# El worker comparte la configuracion con la API: llega por variables de
+# entorno, no por un archivo `.env` dentro del contenedor. La comprobacion es
+# la misma que hace la API (mismo formato, mismo mensaje): un worker que no
+# puede descifrar no tiene por que arrancar.
 # =============================================================================
 
 set -eu
 
 cd /var/www/html
 
-if [ ! -f .env ]; then
-    echo "VeterinariaHefesto: falta el archivo .env." >&2
+clave="${APP_KEY:-}"
+if [ -z "$clave" ] && [ -f .env ]; then
+    clave="$(sed -n 's/^APP_KEY=//p' .env | tail -n 1 | tr -d '"\r ')"
+fi
+
+if ! printf '%s' "$clave" | grep -Eq '^base64:[A-Za-z0-9+/]{43}=$'; then
+    echo "VeterinariaHefesto: APP_KEY no esta o no es valida." >&2
+    echo "Generela con:" >&2
+    echo "  docker compose -f deploy/docker-compose.prod.yml run --rm --no-deps --entrypoint php api artisan key:generate --show" >&2
+    echo "y copie la salida a APP_KEY= en api/.env (o exporte APP_KEY en el entorno del contenedor)." >&2
     exit 1
 fi
 
