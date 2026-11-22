@@ -4,7 +4,8 @@ Este documento reemplaza, para `api/`, la frase «código escrito, sin ejecutar�
 de [10-PRUEBAS-Y-ESTADO.md](10-PRUEBAS-Y-ESTADO.md). Todo lo que dice salió de
 una ejecución; lo que no se ejecutó está marcado como **no verificado**.
 
-- **Medido el:** 2026-11-14, sobre `feature/codex-arranque` en `d2f4d0c`.
+- **Medido el:** 2026-11-21, sobre `fix/imagen-y-tests` en `3ce87a0` (mas el
+  arreglo de G1 de este mismo cambio).
 - **Con:** PHP 8.4.27 (imagen `deploy/pruebas/Dockerfile`), PostgreSQL 18.6,
   Laravel 13.42.0, PHPUnit 13.4.7 (versiones de `api/composer.lock`).
 - **Comando único:** `bash herramientas/probar.sh` (instala, migra en un
@@ -20,7 +21,7 @@ una ejecución; lo que no se ejecutó está marcado como **no verificado**.
 | ¿Migra? | Sí, las 18 migraciones, después de corregir 3. |
 | ¿El aislamiento por RLS funciona? | Sí: las 20 pruebas de la suite `Aislamiento` menos una pasan, y `clinica:verificar-aislamiento` sale con 0. |
 | ¿Alguien puede iniciar sesión? | **No.** Ver G2 y G6. |
-| ¿La suite original pasa? | 51 de 67. Los 16 fallos tienen 5 causas. |
+| ¿La suite pasa? | 82 de 92. Los 10 que no pasan tienen 6 causas conocidas (G2 a G7). |
 
 ## Qué hubo que corregir para que arrancara
 
@@ -38,25 +39,26 @@ la suite.
 | 7 | Las pruebas no limpiaban la base entre sí | `api/tests/TestCase.php` | `duplicate key value violates unique constraint "clinicas_slug_unique"`: cada prueba dejaba sus filas y la siguiente chocaba |
 | 8 | La suite `Feature` repetía los archivos de `Aislamiento` y `Permisos` | `api/phpunit.xml` | 6 avisos `Cannot add file … as it was already added to test suite "Feature"` |
 | 9 | `verificar_referencias.py` recorría `api/vendor` | `herramientas/` | falso positivo en cuanto se instalan dependencias |
+| 10 | `sumarMeses` llamaba a `addMonthsNoOverflow()`, que es API de Carbon, sobre un `DateTimeImmutable` | `api/app/Services/Vacunas/CalculadorDeProximaDosis.php:95` | `Call to undefined method DateTimeImmutable::addMonthsNoOverflow()` |
 
 ## Resultado de la suite
 
 | | Pruebas | Pasan | No pasan |
 |---|---:|---:|---:|
-| Suite original | 67 | 51 | 16 |
-| Pruebas de arranque agregadas (`ArranqueTest`, `DefectosDeArranqueTest`) | 8 | 5 | 3 |
-| **Total** | **75** | **56** | **19** |
+| Suite heredada | 82 | 72 | 10 |
+| Casos frontera de la suma de meses (`SumarMesesCasosFronteraTest`) | 10 | 10 | 0 |
+| **Total** | **92** | **82** | **10** |
 
-Ninguna prueba se omite. Las 19 que no pasan están, una por línea, en
+Ninguna prueba se omite. Las 10 que no pasan están, una por línea, en
 `api/tests/fallos-conocidos.txt`.
 
 ## Fallos conocidos por causa
 
-No se arreglaron: se cuentan. Cada grupo es **una** corrección.
+No se arreglaron: se cuentan. Cada grupo es **una** corrección. (G1 sí se
+arregló: ver «Qué hubo que corregir para que arrancara», fila 10.)
 
 | Grupo | Pruebas | Tipo | Causa | Dónde |
 |---|---:|---|---|---|
-| G1 | 9 | defecto de código | `sumarMeses` llama a `addMonthsNoOverflow()` sobre un `DateTimeImmutable`; ese método es de Carbon | `api/app/Services/Vacunas/CalculadorDeProximaDosis.php:95` |
 | G2 | 5 | defecto de código | `Usuario` extiende `Model`: no es `Authenticatable` ni tiene `can()` | `api/app/Models/Usuario.php:22` |
 | G3 | 1 | defecto de la prueba | usa un enum como clave de arreglo (`TypeError`) | `api/tests/Feature/Permisos/RolesYFichaClinicaTest.php:156` |
 | G4 | 1 | defecto de la prueba | `refresh()` fuera del contexto de clínica; la RLS lo rechaza | `api/tests/Feature/Permisos/RolesYFichaClinicaTest.php:192` |
@@ -66,15 +68,6 @@ No se arreglaron: se cuentan. Cada grupo es **una** corrección.
 
 Pruebas de cada grupo:
 
-- **G1:** `test_suma_un_intervalo_normal`,
-  `test_31_de_enero_mas_un_mes_cae_el_28_de_febrero`,
-  `test_31_de_enero_mas_un_mes_en_ano_bisiesto_cae_el_29`,
-  `test_30_de_noviembre_mas_un_mes_cae_el_30_de_diciembre`,
-  `test_31_de_diciembre_mas_un_mes_cae_en_enero_del_siguiente_ano`,
-  `test_un_refuerzo_manda_sobre_el_intervalo`,
-  `test_un_refuerzo_antes_del_intervalo_tambien_manda`,
-  `test_la_edad_minima_se_traduce_a_fecha`,
-  `test_el_ajuste_de_fin_de_mes_no_se_arrastra_al_siguiente_salto`.
 - **G2:** `test_solo_el_profesional_abre_la_ficha_clinica`,
   `test_recepcion_ve_la_identificacion_pero_no_el_historial`,
   `test_solo_el_profesional_prescribe_y_aplica_vacunas`,
@@ -92,9 +85,9 @@ Consecuencias que no son una prueba:
   `Auth::guard('web')->login($usuario)` y el guard rechaza el modelo (G2); y con
   `SESSION_DRIVER=database`, que es el valor de `api/.env.example`, la sesión
   no se construye (G6).
-- **La semilla no corre.** `bash herramientas/probar.sh artisan db:seed --force`
-  termina con `Call to undefined method DateTimeImmutable::addMonthsNoOverflow()`
-  (G1, vía `database/seeders/ClinicaDeEjemploSeeder.php:322`).
+- **La semilla sí corre** (comprobado el 2026-11-21): antes moría en
+  `database/seeders/ClinicaDeEjemploSeeder.php:322` por G1, que ya está
+  corregido.
 
 ## Lo que la suite no cubre
 

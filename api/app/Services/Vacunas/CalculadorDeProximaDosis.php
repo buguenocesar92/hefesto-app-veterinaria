@@ -54,8 +54,8 @@ class CalculadorDeProximaDosis
     /**
      * Suma meses a una fecha, con el detalle del fin de mes.
      *
-     * POR QUE NO BASTA CON `->addMonthsNoOverflow()`
-     * ----------------------------------------------
+     * POR QUE NO BASTA CON SUMAR MESES
+     * ---------------------------------
      * Por muchisimas combinaciones de dia y mes, la suma "n intuitiva"
      * (31 de enero mas un mes) no existe como fecha. Hay que decidir que
      * hacer, y la respuesta que se usa en la practica es la que usan los
@@ -63,12 +63,20 @@ class CalculadorDeProximaDosis
      * destino.
      *
      *  - 31 de enero + 1 mes = 28 (o 29) de febrero, NO 2 ni 3 de marzo.
-     *  - 30 de noviembre + 1 mes = 31 de diciembre.
+     *  - 30 de noviembre + 1 mes = 30 de diciembre.
      *  - 29 de febrero + 12 meses = 28 de febrero del ano siguiente.
      *
-     * Se usa `addMonthsNoOverflow` justamente por eso. Y antes se fija el dia
-     * a 1 antes de sumar, para que el ajuste no arrastre el error a meses
-     * siguientes.
+     * COMO SE HACE, EN TRES PASOS
+     * ---------------------------
+     * 1. Se ancla el dia en 1 antes de sumar. Asi la aritmetica de meses no
+     *    depende del dia que todavia no se sabe si va a existir en el mes de
+     *    destino, y el ajuste no se arrastra a meses siguientes.
+     * 2. Se suman los meses enteros con `modify('+N months')`, que es la API
+     *    de `DateTimeImmutable`. Con el dia en 1, el mes de destino siempre
+     *    existe: no hay desborde que ajustar.
+     * 3. Se vuelve al dia que se queria conservar con
+     *    `min(dia, dias del mes de destino)`: si ese dia existe, se
+     *    conserva; si no, se usa el ultimo dia de ese mes.
      *
      * UNA ADVERTENCIA QUE IMPORTA CLINICAMENTE
      * ---------------------------------------
@@ -92,12 +100,12 @@ class CalculadorDeProximaDosis
         // que todavia no se sabe si va a existir en el mes de destino.
         $sumado = $fecha
             ->setDate((int) $fecha->format('Y'), (int) $fecha->format('n'), 1)
-            ->addMonthsNoOverflow($meses);
+            ->modify(sprintf('%+d months', $meses));
 
         // Si el dia no existe en el mes de destino, se recurre al ultimo dia de
         // ese mes. Este es el `min` que hace la diferencia entre "31 de enero
         // mas un mes" = 28 de febrero y no = 2 o 3 de marzo.
-        $diaUtil = min($dia, $sumado->daysInMonth);
+        $diaUtil = min($dia, (int) $sumado->format('t'));
 
         return $sumado->setDate(
             (int) $sumado->format('Y'),

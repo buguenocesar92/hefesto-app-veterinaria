@@ -6,18 +6,6 @@
 # cambio; nunca se agrega una linea para tapar un fallo nuevo sin anotarlo en
 # docs/ESTADO-REAL.md.
 
-# G1. CalculadorDeProximaDosis::sumarMeses llama a addMonthsNoOverflow() sobre
-#     un DateTimeImmutable (es un metodo de Carbon).
-Tests\Unit\CalculadorDeProximaDosisTest::test_suma_un_intervalo_normal
-Tests\Unit\CalculadorDeProximaDosisTest::test_31_de_enero_mas_un_mes_cae_el_28_de_febrero
-Tests\Unit\CalculadorDeProximaDosisTest::test_31_de_enero_mas_un_mes_en_ano_bisiesto_cae_el_29
-Tests\Unit\CalculadorDeProximaDosisTest::test_30_de_noviembre_mas_un_mes_cae_el_30_de_diciembre
-Tests\Unit\CalculadorDeProximaDosisTest::test_31_de_diciembre_mas_un_mes_cae_en_enero_del_siguiente_ano
-Tests\Unit\CalculadorDeProximaDosisTest::test_un_refuerzo_manda_sobre_el_intervalo
-Tests\Unit\CalculadorDeProximaDosisTest::test_un_refuerzo_antes_del_intervalo_tambien_manda
-Tests\Unit\CalculadorDeProximaDosisTest::test_la_edad_minima_se_traduce_a_fecha
-Tests\Unit\CalculadorDeProximaDosisTest::test_el_ajuste_de_fin_de_mes_no_se_arrastra_al_siguiente_salto
-
 # G2. App\Models\Usuario extiende Model: no es Authenticatable ni Authorizable
 #     (no tiene can() y el guard de sesion no lo acepta).
 Tests\Feature\Permisos\RolesYFichaClinicaTest::test_solo_el_profesional_abre_la_ficha_clinica
