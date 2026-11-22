@@ -43,6 +43,7 @@ la suite.
 | 9 | `verificar_referencias.py` recorría `api/vendor` | `herramientas/` | falso positivo en cuanto se instalan dependencias |
 | 10 | `sumarMeses` llamaba a `addMonthsNoOverflow()`, que es API de Carbon, sobre un `DateTimeImmutable` | `api/app/Services/Vacunas/CalculadorDeProximaDosis.php:95` | `Call to undefined method DateTimeImmutable::addMonthsNoOverflow()` |
 | 11 | Las tablas de la cola de Laravel (`jobs` y `failed_jobs`) no tenían migración: con `QUEUE_CONNECTION=database` (el valor por defecto de Laravel) el worker no tenía dónde leer los trabajos, y `failed_jobs` falta con cualquier conexión, porque Laravel registra ahí los trabajos fallidos | `api/database/migrations/2026_11_22_000019_crear_tabla_colas.php` | `SQLSTATE[42P01]: Undefined table: 7 ERROR: relation "jobs" does not exist`, cada 3 s en el registro del worker |
+| 12 | `AUTHENTIK_SCOPES` sin comillas en el ejemplo de entorno: el valor tiene espacios y phpdotenv rechaza el archivo entero, así que no cargaba ningún comando de artisan (tampoco `key:generate`) | `api/.env.example:118` | `Failed to parse dotenv file. Encountered unexpected whitespace at [openid profile email]` |
 
 ## Resultado de la suite
 
