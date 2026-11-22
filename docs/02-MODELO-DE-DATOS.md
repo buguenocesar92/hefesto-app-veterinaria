@@ -49,11 +49,6 @@ clinicas                    el tenant (sin RLS, con vista publica)
 └── sesiones                sesion de Laravel
 ```
 
-**Las tablas de la cola** (`jobs`, `failed_jobs`) quedan **fuera** de este árbol:
-no pertenecen a una clinica. El worker las lee antes de saber de qué clínica es
-el trabajo, así que no pueden llevar la política de `tenant_id`. Ver
-[03](03-MULTITENANCY-Y-ROLES.md), sección 4.
-
 ## Las tres reglas estructurales
 
 ### 1. El historial cuelga de la mascota
