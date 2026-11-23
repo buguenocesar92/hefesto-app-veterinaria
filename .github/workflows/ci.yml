@@ -21,7 +21,13 @@ concurrency:
 jobs:
   api:
     name: api (migraciones + suite)
-    runs-on: ubuntu-24.04
+    # Sin la variable de repositorio RUNNER_CI=xeon corre en GitHub (ubuntu-24.04).
+    # Con RUNNER_CI=xeon va a una VM efimera del Xeon (Cesar pidio todo el CI ahi:
+    # los runners de GitHub de esta cuenta fallan por facturacion). La VM trae
+    # docker y python3, que es todo lo que usan estos pasos. Dependabot no recibe
+    # `vars`: sin su termino sus PR quedarian en GitHub. Las PR desde forks van
+    # SIEMPRE a GitHub: nunca codigo ajeno en hardware propio.
+    runs-on: ${{ (vars.RUNNER_CI == 'xeon' || github.actor == 'dependabot[bot]') && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && fromJSON('["self-hosted","xeon-ci"]') || 'ubuntu-24.04' }}
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
